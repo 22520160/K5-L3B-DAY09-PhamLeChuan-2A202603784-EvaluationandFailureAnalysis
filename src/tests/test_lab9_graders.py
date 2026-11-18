@@ -48,3 +48,14 @@ def test_wrong_amount_in_ledger(graders):
 
 def test_override_event_breaks_db_fact(graders):
     assert graders.DbFactKept().evaluate(ctx(trial(events=[{"kind": "model_override", "payload": {}}]))).value is False
+
+
+def test_reply_amount_must_match_ledger(graders):
+    events = [{"kind": "reply", "payload": {"text": "LogiX đã hoàn 90.000đ cho đơn O-515."}}]
+    assert graders.ReplyLedgerMatch().evaluate(ctx(trial(refund_vnd=90000, events=events))).value is True
+    assert graders.ReplyLedgerMatch().evaluate(ctx(trial(refund_vnd=120000, events=events))).value is False
+
+
+def test_reply_without_money_amount_does_not_create_mismatch(graders):
+    events = [{"kind": "reply", "payload": {"text": "Đơn chưa đủ điều kiện hoàn theo chính sách."}}]
+    assert graders.ReplyLedgerMatch().evaluate(ctx(trial(refund_vnd=0, events=events))).value is True
